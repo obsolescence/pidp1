@@ -44,7 +44,7 @@ while true; do
 		make -C /opt/pidp1/src/blincolnlights/panel_pidp1 	# panel driver
 		make -C /opt/pidp1/src/blincolnlights/pdp1 	# simulator
 		make -C /opt/pidp1/src/scanpf 			# returns sense switches
-		make -C /opt/pidp1/src/blincolnlights/pidp1_test 	# hardware test program
+		make -C /opt/pidp1/src/pidp1_test 	# hardware test program
 		break
 		;;
         [Nn]* ) 
@@ -193,48 +193,49 @@ while true; do
     echo
     read -p "Add desktop icons and desktop settings? " prxn
     case $prxn in
-        [Yy]* ) 
-            cp /opt/pidp1/install/tty.desktop /home/pi/Desktop/
-            cp /opt/pidp1/install/pdp1control.desktop /home/pi/Desktop/
-            cp /opt/pidp1/install/type30.desktop /home/pi/Desktop/
-            cp /opt/pidp1/install/ptr.desktop /home/pi/Desktop/
-            cp /opt/pidp1/install/ptp.desktop /home/pi/Desktop/
+        [Yy]* )
+            # Copy desktop icons
+            cp /opt/pidp1/install/tty.desktop "$HOME/Desktop/"
+            cp /opt/pidp1/install/pdp1control.desktop "$HOME/Desktop/"
+            cp /opt/pidp1/install/type30.desktop "$HOME/Desktop/"
+            cp /opt/pidp1/install/ptr.desktop "$HOME/Desktop/"
+            cp /opt/pidp1/install/ptp.desktop "$HOME/Desktop/"
 
-            #make pcmanf run on double click, change its config file
-            config_file="/home/pi/.config/libfm/libfm.conf"
-            # Create the directory if it doesn't exist
-            mkdir -p "$(dirname "$config_file")"
-            # Add or update the quick_exec setting
+            # Make pcmanfm run on double click by updating its config file
+            config_file="$HOME/.config/libfm/libfm.conf"
+            mkdir -p "$(dirname "$config_file")" # Ensure the directory exists
             if grep -q "^\s*quick_exec=" "$config_file" 2>/dev/null; then
-                echo ...Update existing setting...
+                echo "...Updating existing setting..."
                 sed -i 's/^\s*quick_exec=.*/quick_exec=1/' "$config_file"
             else
-                echo ...Adding the config file, it does not exist yet
+                echo "...Adding the config file, it does not exist yet..."
                 echo -e "[config]\nquick_exec=1" >> "$config_file"
             fi
-        
-            # wallpaper
-            pcmanfm --set-wallpaper /opt/pidp1/install/wallpaper.png --wallpaper-mode=fit
 
-            #echo
-            #echo "Installing Teletype font..."
-            #echo
-            #mkdir ~/.fonts
-            #    cp /opt/pidp1/install/TTY33MAlc-Book.ttf ~/.fonts/
-            #fc-cache -v -f
-
+            # Detect session type and set wallpaper
+            if [ "$XDG_SESSION_TYPE" = "wayland" ]; then
+                # Use swaybg or swww for Wayland
+                command -v swaybg >/dev/null 2>&1 && swaybg -i /opt/pidp1/install/wallpaper.png -m fit &
+                command -v swww >/dev/null 2>&1 && swww img /opt/pidp1/install/wallpaper.png --transition-type center &
+            elif [ "$XDG_SESSION_TYPE" = "x11" ]; then
+                # Use feh for X11
+                command -v feh >/dev/null 2>&1 && feh --bg-scale /opt/pidp1/install/wallpaper.png
+            else
+                echo "Unsupported session type: $XDG_SESSION_TYPE"
+            fi
 
             echo "Desktop updated."
             break
-	    ;;
+            ;;
 
-        [Nn]* ) 
-            echo Skipped. You can do it later by re-running this install script.
+        [Nn]* )
+            echo "Skipped. You can do it later by re-running this install script."
             break
-	    ;;
-        * ) echo "Please answer Y or N.";;
+            ;;
+        * ) echo "Please answer Y or N." ;;
     esac
 done
+
 
 
 echo
