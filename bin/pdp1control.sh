@@ -45,7 +45,9 @@ do_start() {
 
 	echo start panel driver
 	/opt/pidp1/bin/panel_pidp1 &
-sleep 1
+
+	sleep 1 # only needed for autoboot at startup
+
 	echo read boot config from sense switches
 	/opt/pidp1/bin/scanpf
 	sw=$?
@@ -81,11 +83,11 @@ do_stop() {
 	    status=$?
 	fi
     	sleep 1
-    	pkill panel_pidp1
-    	pkill p7simES
+    	pkill -2 panel_pidp1
+    	pkill -2 p7simES
     	sleep 1
-    	pkill panel_pidp1
-    	pkill p7simES
+    	pkill -2 panel_pidp1
+    	pkill -2 p7simES
 	return $status
 }
 
@@ -119,20 +121,20 @@ case "$1" in
   *)
 	do_stat
 	if [ $status = 0 ]; then
-		#read -p "(S)tart, Start with boot (number), or (C)ancel? " respx
-		read -p "(S)tart or (C)ancel? " respx
+		read -p "(S)tart, Start with boot (number), or (C)ancel? " respx
+		#read -p "(S)tart or (C)ancel? " respx
 		case $respx in
 			[Ss]* )
 				do_start
 				;;
-#			[0-9]* )
-#				#boot_number=$respx
-#				# convert to decimal
-#				#boot_number=$((8#$ooot_number))
-#				set -- "$1" "$respx"
-#				echo reassigned $2
-#				do_start $1 $2
-#				;;
+			[0-9]* )
+				#boot_number=$respx
+				# convert to decimal
+				#boot_number=$((8#$ooot_number))
+				set -- "start" "$respx"
+				echo reassigned s2 to .$2. and s1 is .$1.
+				do_start $1 $2
+				;;
 			[Cc]* )
 				exit 1
 				;;
