@@ -483,6 +483,24 @@ getCircle(Region *r)
 	return c;
 }
 
+Region
+getSquareRegion(Region *r)
+{
+	Region rr;
+	rr.x = r->x;
+	rr.y = r->y;
+	rr.w = r->w;
+	rr.h = r->h;
+	if(rr.w > rr.h) {
+		rr.x += (rr.w-rr.h)/2;
+		rr.w = rr.h;
+	} else {
+		rr.y += (rr.h-rr.w)/2;
+		rr.h = rr.w;
+	}
+	return rr;
+}
+
 void
 drawCircle_(float x1, float y1, float x2, float y2)
 {
@@ -1209,6 +1227,7 @@ main(int argc, char *argv[])
 	while(running) {
 		int show = 0;
 		while(SDL_PollEvent(&event)) {
+			Layout *l = &layouts[lay];
 			switch(event.type) {
 			case SDL_KEYDOWN:
 				keydown(event.key.keysym);
@@ -1228,19 +1247,19 @@ main(int argc, char *argv[])
 				peny = event.motion.y;
 				mousemotion(event.motion);
 				if(pendown)
-					updatepen();
+					updatepen(&l->regions[ID_DISP]);
 				break;
 			case SDL_MOUSEBUTTONDOWN:
 				if(layoutmode) mousedown(event.button);
 				if(event.button.button == 1)
 					pendown = 1;
-				updatepen();
+				updatepen(&l->regions[ID_DISP]);
 				break;
 			case SDL_MOUSEBUTTONUP:
 				if(layoutmode) mouseup(event.button);
 				if(event.button.button == 1)
 					pendown = 0;
-				updatepen();
+				updatepen(&l->regions[ID_DISP]);
 				break;
 
 			case SDL_QUIT:
@@ -1305,6 +1324,7 @@ main(int argc, char *argv[])
 					Region *r = &layouts[lay].regions[ID_DISP];
 					setColor(0,0,0,255);
 					Circle c = getCircle(r);
+
 					glEnable(GL_BLEND);
 					glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 					drawCircle(c.x, c.y, c.r);

@@ -368,16 +368,24 @@ int peny;
 int pendown;
 
 void
-updatepen(void)
+updatepen(Region *r)
 {
 	uint32 cmd;
 	cmd = 0xFF<<24;
 	cmd |= pendown << 20;
-// TODO: scaling
-	cmd |= penx << 10;
-	cmd |= 1023-peny;
-	write(dpyfd, &cmd, 4);
-//	printf("%d %d %d\n", penx, peny, pendown);
+
+	Region sr = getSquareRegion(r);
+	int px = (penx-sr.x)/sr.w * 1024;
+	int py = (peny-sr.y)/sr.h * 1024;
+
+	if(px >= 0 && px < 1024 &&
+	   py >= 0 && py < 1024) {
+		cmd |= px << 10;
+		cmd |= 1023-py;
+		write(dpyfd, &cmd, 4);
+	} else if(!pendown) {
+		write(dpyfd, &cmd, 4);
+	}
 }
 
 #endif
