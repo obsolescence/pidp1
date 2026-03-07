@@ -828,9 +828,9 @@ function handleMessage(msg) {
 
 	case 'reply':
 		let state = msg.cmd.endsWith(' on') ? true : false;
-		if(msg.cmd.startsWith('audio now'))
+		if(msg.cmd.startsWith('audio now') || msg.cmd.startsWith('audio '))
 			document.getElementById('audio-output').checked = state;
-		else if(msg.cmd.startsWith('mul-div now'))
+		else if(msg.cmd.startsWith('mul-div now') || msg.cmd.startsWith('muldiv '))
 			document.getElementById('mul-div').checked = state;
 		break;
 
