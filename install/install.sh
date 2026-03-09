@@ -102,10 +102,13 @@ while true; do
             sudo apt install -y screen
 
 	    # not needed for Pi OS but for generic Linux
-	    sudo apt install lxterminal
+	    sudo apt install -y lxterminal
 
 	    # telnet is no longer part of standard linux...
-	    sudo apt install telnet
+	    sudo apt install -y telnet
+
+	    # file selector used in GUI setup
+	    sudo apt install -y python3-tk
 
 	    break
 	    ;;
