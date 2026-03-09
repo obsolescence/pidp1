@@ -60,7 +60,25 @@ done
 # pull in git submodules (for pdp1 sim itself, and the p7sim Type 30 display)
 # =============================================================================
 
-git submodule update --init --recursive
+
+while true; do
+    echo
+    read -p "Update git submodules (required for first install)? " yn
+    case $yn in
+        [Yy]* )
+		git submodule init
+		git submodule update --init --recursive
+		#git submodule update --remote --force
+		#git submodule update --init --remote --recursive --force
+		break
+		;;
+        [Nn]* ) 
+            echo Skipped updating submodules from github
+	    break
+            ;;
+        * ) echo "Please answer yes or no.";;
+    esac
+done
 
 
 # Install required dependencies
