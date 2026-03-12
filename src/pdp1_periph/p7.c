@@ -326,7 +326,7 @@ for(;;){
 		if(esc) {
 			esc = 0;
 			time += cmd;
-		} if(dt == 511) {
+		} else if(dt == 511) {
 			esc = 1;
 		} else {
 			x = cmd&01777;
