@@ -72,7 +72,7 @@ drawString(const char *s, int x, int y)
 
 		case '\t':
 			int nsp = lx/space;
-			nsp = ((nsp+7)/8)*8;
+			nsp = ((nsp+8)/8)*8;
 			lx = nsp*space;
 			break;
 

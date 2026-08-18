@@ -86,7 +86,7 @@ class Typewriter {
 
 		this.line += c;
 		if(c == '\t')
-			this.linepos = (this.linepos+7)&~7;
+			this.linepos = (this.linepos+8)&~7;
 		else
 			this.linepos++;
 		if(c == '\n') {
