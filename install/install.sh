@@ -17,6 +17,57 @@ if [ ! -d "/opt/pidp1" ]; then
     exit 1
 fi
 
+# 20260927 --recompile: non-interactive rebuild of all binaries + privileges.
+# Used by setup scripts (e.g. agent-pdp1) and for quick rebuilds after an
+# update. Without the flag, this script behaves exactly as before.
+# Exit status: 0 = all builds OK, 1 = one or more steps failed.
+recompile_binaries() {
+    local rc=0
+
+    make -C /opt/pidp1/src/blincolnlights/pinctrl || rc=1  # pinctrl functions
+    make -C /opt/pidp1/src/blincolnlights/panel_pidp1 || rc=1  # panel driver
+    make -C /opt/pidp1/src/blincolnlights/pdp1 || rc=1  # simulator
+    make -C /opt/pidp1/src/p7sim || rc=1  # returns sense switches
+    make -C /opt/pidp1/src/scanpf || rc=1  # returns sense switches
+    make -C /opt/pidp1/src/blincolnlights/tapevis || rc=1  # returns sense switches
+    make -C /opt/pidp1/src/pidp1_test || rc=1  # hardware test program
+    make -C /opt/pidp1/src/pdp1_periph || rc=1  # hardware test program
+
+    # this makes the virtual pdp-1 panel, used if no PiDP-1 hardware is attached:
+    make -C /opt/pidp1/src/blincolnlights/vpanel_pdp1 || rc=1  # panel driver
+
+    # the macro1_1 cross-compiler:
+    gcc /opt/pidp1/src/macro/macro1_1.c -o /opt/pidp1/src/macro/macro1_1 || rc=1
+    # monas cross assembler:
+    make -C /opt/pidp1/src/monas || rc=1
+    # the usb_paper_tape tool:
+    make -C /opt/pidp1/src/usb_paper_tape || rc=1
+    # Bill Ezell's tape disassembler:
+    cc /opt/pidp1/src/disassembler/disassemble_tape.c -o /opt/pidp1/src/disassembler/disassemble_tape || rc=1
+
+    echo Setting required access privileges to pidp1 simulator
+    # make sure pidp1 panel driver has the right privileges
+    #   to access GPIO with root privileges:
+    sudo chmod +s /opt/pidp1/src/blincolnlights/panel_pidp1 || rc=1
+    #   to run as a RT thread:
+    sudo setcap cap_sys_nice+ep /opt/pidp1/src/blincolnlights/panel_pidp1/panel_pidp1 || rc=1
+
+    return $rc
+}
+
+# --recompile: build everything and exit (no prompts, for setup scripts).
+if [ "${1:-}" = "--recompile" ]; then
+    echo
+    echo Recompiling all required PiDP-1 binaries...
+    if recompile_binaries; then
+        echo Done.
+    else
+        echo "One or more steps failed - scroll up for details." >&2
+        exit 1
+    fi
+    exit 0
+fi
+
 echo
 echo
 echo PiDP-1 install script
@@ -146,34 +197,8 @@ while true; do
     read -p "Make required PiDP-1 binaries? " yn
     case $yn in
         [Yy]* )
-		make -C /opt/pidp1/src/blincolnlights/pinctrl 	# pinctrl functions
-		make -C /opt/pidp1/src/blincolnlights/panel_pidp1 	# panel driver
-		make -C /opt/pidp1/src/blincolnlights/pdp1 	# simulator
-		make -C /opt/pidp1/src/p7sim			# returns sense switches
-		make -C /opt/pidp1/src/scanpf 			# returns sense switches
-		make -C /opt/pidp1/src/blincolnlights/tapevis	# returns sense switches
-		make -C /opt/pidp1/src/pidp1_test 		# hardware test program
-		make -C /opt/pidp1/src/pdp1_periph		# hardware test program
-		
-		# this makes the virtual pdp-1 panel, used if no PiDP-1 hardware is attached:
-		make -C /opt/pidp1/src/blincolnlights/vpanel_pdp1 	# panel driver
-
-		# the macro1_1 cross-compiler:
-		gcc /opt/pidp1/src/macro/macro1_1.c -o /opt/pidp1/src/macro/macro1_1
-		# monas cross assembler:
-		make -C /opt/pidp1/src/monas
-		# the usb_paper_tape tool:
-		make -C /opt/pidp1/src/usb_paper_tape
-		# Bill Ezell's tape disassembler:
-		cc /opt/pidp1/src/disassembler/disassemble_tape.c -o /opt/pidp1/src/disassembler/disassemble_tape
-            
-		echo Setting required access privileges to pidp1 simulator
-		# make sure pidp1 panel driver has the right privileges
-            	# to access GPIO with root privileges:
-            	sudo chmod +s /opt/pidp1/src/blincolnlights/panel_pidp1
-            	# to run as a RT thread:
-            	sudo setcap cap_sys_nice+ep /opt/pidp1/src/blincolnlights/panel_pidp1/panel_pidp1
-	    	echo Done.
+		recompile_binaries
+		echo Done.
 		break
 		;;
         [Nn]* ) 
